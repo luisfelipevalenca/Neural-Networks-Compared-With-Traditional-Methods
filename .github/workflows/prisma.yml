@@ -34,7 +34,7 @@ jobs:
     name: Run Prisma Cloud IaC Scan to check
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - id: iac-scan
         name: Run Scan on CFT files in the repository
         uses: prisma-cloud-shiftleft/iac-scan-action@53278c231c438216d99b463308a3cbed351ba0c3
@@ -48,14 +48,9 @@ jobs:
           asset_name: 'my-asset-name'
           # The service need to know the type of IaC being scanned
           template_type: 'CFT'
-      - name: Upload SARIF file
+      - name: Upload scan result artifact
         uses: actions/upload-artifact@v2
-        # Results are generated only on a success or failure
-        # this is required since GitHub by default won't run the next step
-        # when the previous one has failed.
-        # And alternative it to add `continue-on-error: true` to the previous step
         if: success() || failure()
         with:
-          # The SARIF Log file name is configurable on scan action
-          # therefore the file name is best read from the steps output
-          sarif_file: ${{ steps.iac-scan.outputs.iac_scan_result_sarif_path }}
+          name: iac_scan_result
+          path: ${{ steps.iac-scan.outputs.iac_scan_result_path }}
