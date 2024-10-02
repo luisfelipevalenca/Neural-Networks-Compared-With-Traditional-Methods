@@ -41,7 +41,7 @@ jobs:
         with:
           # You will need Prisma Cloud API Access Token
           # More details in https://github.com/prisma-cloud-shiftleft/iac-scan-action
-          prisma_api_url: https://api4.prismacloud.io
+          prisma_api_url: https://api.prismacloud.io
           access_key: 678b5f4e-17d4-40a6-a849-59fab8df8786
           secret_key: CrI+qlfxh1acTK2vSvsus9SjUUU=
           # Scan sources on Prisma Cloud are uniquely identified by their name
