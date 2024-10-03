@@ -40,8 +40,8 @@ jobs:
         uses: prisma-cloud-shiftleft/iac-scan-action@53278c231c438216d99b463308a3cbed351ba0c3
         with:
           prisma_api_url: https://api.prismacloud.io
-          access_key: ${{ secrets.PRISMA_ACCESS_KEY }}
-          secret_key: ${{ secrets.PRISMA_SECRET_KEY }}
+          access_key: BC_API_KEY
+          secret_key: PRISMA_ACCESS_KEY::PRISMA_SECRET_KEY
           asset_name: 'my-asset-name'
           template_type: 'CFT'
       - name: Upload scan result artifact
