@@ -18,7 +18,7 @@ on:
   pull_request:
     branches: [ "main" ]
   schedule:
-    - cron: '25 18 * * 6'
+    - cron: '35 4 * * 5'
 
 permissions:
   contents: read
@@ -26,32 +26,37 @@ permissions:
 jobs:
   prisma_cloud_iac_scan:
     permissions:
-      contents: read
-      security-events: write
-      actions: read
+      contents: read # for actions/checkout to fetch code
+      security-events: write # for github/codeql-action/upload-sarif to upload SARIF results
+      actions: read # only required for a private repository by github/codeql-action/upload-sarif to get the Action run status
     runs-on: ubuntu-latest
     name: Run Prisma Cloud IaC Scan to check
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
-      
-      - id: iac-scan
-        name: Run Scan on CFT files in the repository
+        uses: actions/checkout@v2
+
+      # Run Bridgecrew Checkov with valid Bridgecrew API Key and repo-id
+      - name: Run Bridgecrew Checkov
+        id: bridgecrew
+        uses: bridgecrewio/checkov-action@master
+        env:
+          BC_API_KEY: ${{ secrets.BC_API_KEY }}  # Correct Bridgecrew API Key
+        with:
+          directory: .  # Scan the current directory
+          output_format: sarif
+          log_level: WARNING
+          container_user: 0
+          repo_id: 'luisfelipevalenca/insecurebank'  # Replace with your GitHub repo ID
+
+      # Run Prisma Cloud IaC Scan
+      - name: Run Prisma Cloud IaC Scan
+        id: prisma-cloud
         uses: prisma-cloud-shiftleft/iac-scan-action@53278c231c438216d99b463308a3cbed351ba0c3
         with:
-          prisma_api_url: https://app2.prismacloud.io
-          access_key: a6a67b2b-1cdc-40d8-a83b-b1e0f779125c
-          secret_key: HPP7yFvBcyhhSP5psnaZqh4d3+U=
+          prisma_api_url: https://api.prismacloud.io  # Correct Prisma Cloud API URL
+          access_key: ${{ secrets.PRISMA_ACCESS_KEY }}  # Prisma Cloud access key from GitHub Secrets
+          secret_key: ${{ secrets.PRISMA_SECRET_KEY }}  # Prisma Cloud secret key from GitHub Secrets
           asset_name: 'my-asset-name'
-          template_type: 'CFT'
+          template_type: 'CFT'  # CloudFormation Template
           scan_path: ./
           result_path: ./prismacloud_iac
-          ignore_ssl: false
-        
-      - name: Upload scan result artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: iac_scan_result
-          path: ${{ steps.iac-scan.outputs.iac_scan_result_path }}
-
-
