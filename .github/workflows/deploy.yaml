@@ -1,0 +1,32 @@
+on: [push]
+jobs:
+  push-web-image:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Build Web Image
+      run: docker build -t insecurebank .
+    - name: Login to ECR
+      id: ecr
+      uses: jwalton/gh-ecr-login@v2.1.0
+      with:
+        access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        region: us-east-1
+    - name: Push Web to ECR
+      run: |
+        docker tag insecurebank ${{ steps.ecr.outputs.account }}.dkr.ecr.us-east-1.amazonaws.com/insecurebank:latest
+        docker push ${{ steps.ecr.outputs.account }}.dkr.ecr.us-east-1.amazonaws.com/insecurebank:latest
+  restart-service:
+    needs: push-web-image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Creds
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Restart ECS service
+        run: aws ecs update-service --force-new-deployment --service insecurebank-service --cluster insecurebank_cluster
