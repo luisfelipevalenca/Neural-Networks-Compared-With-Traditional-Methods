@@ -39,7 +39,7 @@ jobs:
         name: Run Scan on CFT files in the repository
         uses: prisma-cloud-shiftleft/iac-scan-action@53278c231c438216d99b463308a3cbed351ba0c3
         with:
-          prisma_api_url: https://api2.prismacloud.io
+          prisma_api_url: https://api.prismacloud.io
           access_key: a6a67b2b-1cdc-40d8-a83b-b1e0f779125c
           secret_key: HPP7yFvBcyhhSP5psnaZqh4d3+U=
           asset_name: 'my-asset-name'
