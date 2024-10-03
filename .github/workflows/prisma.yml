@@ -16,7 +16,6 @@ on:
   push:
     branches: [ "main" ]
   pull_request:
-    # The branches below must be a subset of the branches above
     branches: [ "main" ]
   schedule:
     - cron: '25 18 * * 6'
@@ -35,34 +34,24 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+      
       - id: iac-scan
         name: Run Scan on CFT files in the repository
         uses: prisma-cloud-shiftleft/iac-scan-action@53278c231c438216d99b463308a3cbed351ba0c3
         with:
-          prisma_api_url: https://api.prismacloud.io
-          access_key: BC_API_KEY
-          secret_key: PRISMA_ACCESS_KEY::PRISMA_SECRET_KEY
+          prisma_api_url: https://api2.prismacloud.io
+          access_key: a6a67b2b-1cdc-40d8-a83b-b1e0f779125c
+          secret_key: HPP7yFvBcyhhSP5psnaZqh4d3+U=
           asset_name: 'my-asset-name'
           template_type: 'CFT'
+          scan_path: ./
+          result_path: ./prismacloud_iac
+          ignore_ssl: false
+        
       - name: Upload scan result artifact
         uses: actions/upload-artifact@v4
-        if: success() || failure()
         with:
           name: iac_scan_result
           path: ${{ steps.iac-scan.outputs.iac_scan_result_path }}
 
-      # Custom retry logic for the Prisma Cloud IaC Scan step
-      - name: Retry on failure
-        if: failure()
-        run: |
-          for i in {1..3}; do
-            echo "Retrying Prisma Cloud IaC Scan... Attempt $i"
-            # Trigger the scan again
-            # Exponential backoff (wait for 5 seconds on the first retry, then 10 seconds, and so on)
-            sleep $((5 * i))
-            # Exit the loop if the command succeeds
-            if ./run_scan.sh; then
-              echo "Scan succeeded on attempt $i"
-              break
-            fi
-          done
+
