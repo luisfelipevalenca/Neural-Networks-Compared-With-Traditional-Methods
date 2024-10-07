@@ -1,0 +1,53 @@
+
+name: Security Scan with Checkov and Prisma Cloud
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  security_scan:
+    name: Run Security Scan with Checkov and Prisma Cloud
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Install Checkov
+      run: |
+        python -m pip install --upgrade pip
+        pip install checkov
+
+    - name: Run Checkov Scan
+      run: |
+        checkov -d . --output json > checkov_report.json
+      continue-on-error: true
+      id: checkov_scan
+
+    - name: Upload Checkov Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: checkov-report
+        path: checkov_report.json
+
+    - name: Download twistcli
+      run: |
+        curl -L -o twistcli https://<prisma-cloud-url>/api/v1/util/twistcli
+        chmod +x twistcli
+
+    - name: Prisma Cloud IaC Scan
+      env:
+        PRISMA_ACCESS_KEY: ${{ secrets.PRISMA_ACCESS_KEY }}
+        PRISMA_SECRET_KEY: ${{ secrets.PRISMA_SECRET_KEY }}
+        PRISMA_API_URL: ${{ secrets.PRISMA_API_URL }}
+      run: |
+        ./twistcli coderepo scan iac --address $PRISMA_API_URL --user $PRISMA_ACCESS_KEY --password $PRISMA_SECRET_KEY --details .
+
+    - name: Check Prisma Cloud scan results
+      if: failure()
+      run: echo "Security scan failed. Check Prisma Cloud dashboard for details."
